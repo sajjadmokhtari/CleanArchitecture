@@ -1,7 +1,6 @@
 package redis
 
 import (
-	"context"
 	"time"
 
 	"CleanArchitecture/internal/repository"
@@ -12,12 +11,6 @@ import (
 type OtpRedisRepository struct {
 	client *redis.Client
 }
-
-
-
-var Ctx = context.Background()
-
-
 
 func NewOtpRedisRepository(client *redis.Client) repository.OTPRepository {
 	return &OtpRedisRepository{

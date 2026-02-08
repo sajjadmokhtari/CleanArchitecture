@@ -1,0 +1,65 @@
+version: "3.9"
+
+services:
+  # -------------------------------
+  # PostgreSQL Database Service
+  # -------------------------------
+  postgres:
+    image: postgres:15
+    container_name: ca_postgres
+    environment:
+      POSTGRES_USER: ca_user
+      POSTGRES_PASSWORD: ca_pass
+      POSTGRES_DB: ca_db
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - ca_postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - ca_network
+    restart: unless-stopped
+
+  # -------------------------------
+  # PGAdmin (Database GUI)
+  # -------------------------------
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: ca_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@cleanarch.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    volumes:
+      - ca_pgadmin_data:/var/lib/pgadmin
+    ports:
+      - "8081:80"
+    networks:
+      - ca_network
+    restart: unless-stopped
+    depends_on:
+      - postgres
+
+  # -------------------------------
+  # Redis
+  # -------------------------------
+  redis:
+    image: redis:7
+    container_name: ca_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - ca_network
+    restart: unless-stopped
+
+# -------------------------------
+# Volumes (persistent storage)
+# -------------------------------
+volumes:
+  ca_postgres_data:
+  ca_pgadmin_data:
+
+# -------------------------------
+# Network
+# -------------------------------
+networks:
+  ca_network:

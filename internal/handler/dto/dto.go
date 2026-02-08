@@ -1,6 +1,6 @@
 package dto
 
-type SendOtpRequest struct {
+type SendOtpRequest  struct {
     Phone string `json:"phone"`
 }
 
