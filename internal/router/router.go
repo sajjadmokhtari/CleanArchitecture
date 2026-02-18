@@ -3,22 +3,20 @@ package router
 import (
 	"CleanArchitecture/internal/handler"
 
+	_ "CleanArchitecture/docs"
+
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	_ "CleanArchitecture/docs" 
 
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRoutes() *gin.Engine {
+func SetupRoutes(authHandler *handler.AuthHandler) *gin.Engine {
 	r := gin.Default()
 
-	// مسیر OTP
-	r.POST("/auth/send-otp", handler.SendOtpHandler)
-	r.POST("/auth/verify-otp", handler.VerifyOtpHandler)
+	r.POST("/auth/send-otp", authHandler.SendOtpHandler)
+	r.POST("/auth/verify-otp", authHandler.VerifyOtpHandler)
 
-
-	// مسیر Swagger (اینجا اضافه می‌کنیم فقط یکبار)
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	return r
