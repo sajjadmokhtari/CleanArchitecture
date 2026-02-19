@@ -2,10 +2,9 @@ package auth
 
 import (
 	"CleanArchitecture/internal/domain/model"
+	"CleanArchitecture/internal/utils"
 	"errors"
 )
-
-
 
 // فانکشن Verify OTP و ایجاد کاربر
 func (u *AuthUsecase) VerifyOTPAndCreateUser(phone string, inputOtp string) (*model.User, error) {
@@ -18,15 +17,17 @@ func (u *AuthUsecase) VerifyOTPAndCreateUser(phone string, inputOtp string) (*mo
 		return nil, errors.New("invalid otp")
 	}
 
-	// پاک کردن OTP بعد از موفقیت
 	_ = u.otpRepo.Save(phone, "", 1)
-
-	//  ساخت توکن  و سیو توی کوکی ها 
 
 	// بررسی اینکه کاربر از قبل وجود دارد یا نه
 	user, err := u.userRepo.FindByPhone(phone)
 	if err != nil {
-		user = &model.User{Phone: phone}
+		// کاربر جدید
+		user = &model.User{
+			Phone: phone,
+			Role:  utils.MakeRole(phone), // نقش همیشه ست می‌شود
+		}
+
 		if err := u.userRepo.Create(user); err != nil {
 			return nil, err
 		}

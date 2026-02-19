@@ -3,6 +3,9 @@ package handler
 import (
 	"CleanArchitecture/internal/handler/dto"
 	"CleanArchitecture/internal/usecase/auth"
+	"CleanArchitecture/internal/utils/jwt"
+	"CleanArchitecture/pkg/validator"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -10,17 +13,15 @@ import (
 
 // لایه‌ی هندلر (ورودی HTTP)
 type AuthHandler struct {
-    authUsecase *auth.AuthUsecase // یوزکیس احراز هویت
+	authUsecase *auth.AuthUsecase // یوزکیس احراز هویت
 }
 
 // سازنده‌ی هندلر
 func NewAuthHandler(authUsecase *auth.AuthUsecase) *AuthHandler {
-    return &AuthHandler{
-        authUsecase: authUsecase, // تزریق یوزکیس
-    }
+	return &AuthHandler{
+		authUsecase: authUsecase, // تزریق یوزکیس
+	}
 }
-
-
 
 // SendOtpHandler godoc
 // @Summary Send OTP
@@ -35,6 +36,14 @@ func (h *AuthHandler) SendOtpHandler(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		return
+	}
+
+	if !validator.IsValidIranianMobile(req.Phone) {
+		c.JSON(http.StatusBadRequest,gin.H{
+			"error:":"invalide mobile number",
+
+		})
 		return
 	}
 
@@ -67,7 +76,6 @@ func (h *AuthHandler) VerifyOtpHandler(c *gin.Context) {
 		return
 	}
 
-	// 1️⃣ فقط Usecase صدا زده می‌شود
 	user, err := h.authUsecase.VerifyOTPAndCreateUser(req.Phone, req.OTP)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
@@ -77,9 +85,23 @@ func (h *AuthHandler) VerifyOtpHandler(c *gin.Context) {
 		return
 	}
 
-	// 🔥 بعداً می‌توانیم JWT بسازیم
+	role := user.Role
+
+	token, err := jwt.GenerateJWT(user.ID, user.Phone, role)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status": "failed",
+			"error":  "failed to generate token",
+		})
+		return
+	}
+	fmt.Println("token is :",token) //  برای تست
+
+	c.SetCookie("access_token", token, 3600*24, "/", "", false, true)
+
 	c.JSON(http.StatusOK, gin.H{
 		"status": "ok",
 		"user":   user,
+		"role":   role,
 	})
 }
