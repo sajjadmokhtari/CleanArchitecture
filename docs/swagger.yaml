@@ -32,8 +32,7 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties:
-              type: string
+            additionalProperties: true
             type: object
       summary: Send OTP
       tags:

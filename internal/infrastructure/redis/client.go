@@ -15,3 +15,4 @@ func NewRedisClient() *redis.Client {
 		DB:       0,
 	})
 }
+//در کل وصل شدن ردیس چیز خاصی نیست اینجا 

@@ -9,6 +9,8 @@ import (
 	"CleanArchitecture/internal/usecase/auth"
 	"CleanArchitecture/internal/utils/jwt"
 	"log"
+
+	_ "CleanArchitecture/docs"
 )
 
 func main() {
@@ -23,10 +25,11 @@ func main() {
 		log.Fatal("cannot init keys: ", err)
 	}
 
-	userRepo := postgres.NewUserPostgresRepository(db)
-	otpRepo := redis.NewOtpRedisRepository(redisClient)
+	userRepo := postgres.NewUserPostgresRepository(db)    //  کار های دیتا  بیسی با کاربر
+	otpRepo := redis.NewOtpRedisRepository(redisClient)   // ذخیره و گرفتن او تی پی
+	ratelimiter := redis.NewRateLimiterRedis(redisClient) //  برای ریت لیمیت
 
-	authUsecase := auth.NewAuthUsecase(otpRepo, userRepo)
+	authUsecase := auth.NewAuthUsecase(otpRepo, userRepo, ratelimiter)
 	authHandler := handler.NewAuthHandler(authUsecase)
 
 	r := router.SetupRoutes(authHandler)

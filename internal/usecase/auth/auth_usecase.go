@@ -6,13 +6,16 @@ import "CleanArchitecture/internal/repository"
 type AuthUsecase struct {
     otpRepo  repository.OTPRepository   // ریپوی OTP
     userRepo repository.UserRepository  // ریپوی کاربر
+    rateLimiter repository.RateLimiterRepository
 }
 
 // سازنده‌ی یوزکیس
-func NewAuthUsecase(otpRepo repository.OTPRepository, userRepo repository.UserRepository) *AuthUsecase {
+func NewAuthUsecase(otpRepo repository.OTPRepository, userRepo repository.UserRepository,rateLimiter repository.RateLimiterRepository) *AuthUsecase {
     return &AuthUsecase{
         otpRepo:  otpRepo,   // تزریق OTP
         userRepo: userRepo,  // تزریق کاربر
+        rateLimiter: rateLimiter,
+
     }
 }
 

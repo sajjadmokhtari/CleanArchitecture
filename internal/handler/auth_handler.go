@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"CleanArchitecture/internal/handler/dto"
 	"CleanArchitecture/internal/usecase/auth"
 	"CleanArchitecture/internal/utils/jwt"
+	"CleanArchitecture/pkg/dto"
 	"CleanArchitecture/pkg/validator"
 	"fmt"
 	"net/http"
@@ -30,8 +30,10 @@ func NewAuthHandler(authUsecase *auth.AuthUsecase) *AuthHandler {
 // @Accept json
 // @Produce json
 // @Param request body dto.SendOtpRequest true "Phone number"
-// @Success 200 {object} map[string]string
+// @Success 200 {object} map[string]interface{}
+// @Router /auth/send-otp [post]
 func (h *AuthHandler) SendOtpHandler(c *gin.Context) {
+
 	var req dto.SendOtpRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -40,23 +42,27 @@ func (h *AuthHandler) SendOtpHandler(c *gin.Context) {
 	}
 
 	if !validator.IsValidIranianMobile(req.Phone) {
-		c.JSON(http.StatusBadRequest,gin.H{
-			"error:":"invalide mobile number",
-
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid mobile number"})
 		return
 	}
 
-	otp, err := h.authUsecase.SendOTP(req.Phone)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to send otp"})
+	resp := h.authUsecase.SendOTP(req.Phone)
+
+	if !resp.Success {
+		if resp.ErrType == "blocked" || resp.ErrType == "too_many" || resp.ErrType == "wait" {
+			c.JSON(http.StatusTooManyRequests, gin.H{"error": resp.Message})
+			return
+		}
+
+		c.JSON(http.StatusInternalServerError, gin.H{"error": resp.Message})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "otp sent successfully",
-		"otp":     otp, // اینجا در Swagger هم نمایش داده می‌شود
+		"message": resp.Message,
+		"otp":     resp.Code,
 	})
+
 }
 
 // VerifyOtpHandler godoc
@@ -95,7 +101,7 @@ func (h *AuthHandler) VerifyOtpHandler(c *gin.Context) {
 		})
 		return
 	}
-	fmt.Println("token is :",token) //  برای تست
+	fmt.Println("token is :", token) //  برای تست
 
 	c.SetCookie("access_token", token, 3600*24, "/", "", false, true)
 
